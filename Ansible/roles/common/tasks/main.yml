@@ -1,0 +1,92 @@
+---
+# This playbook contains common plays that will be run on all nodes.
+
+- name: Install DigitalOcean repo key
+  apt_key:
+    url: https://repos.sonar.digitalocean.com/sonar-agent.asc
+    state: present
+
+- name: Install DigitalOcean apt repo
+  apt_repository:
+    repo: deb https://repos.sonar.digitalocean.com/apt main main
+    state: present
+    update_cache: yes
+
+- name: Add Docker repo key
+  apt_key:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    id: 9DC858229FC7DD38854AE2D88D81803C0EBFCD88
+    state: present
+
+- name: Add Docker apt repo
+  apt_repository:
+    repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable
+    state: present
+
+- name: Update all packages
+  apt:
+    upgrade: dist
+    update_cache: yes
+    cache_valid_time: 3600
+
+- name: Install deployment dependencies (apt)
+  apt:
+    update_cache: yes
+    allow_unauthenticated: yes
+    name:
+      - do-agent
+      - python3-pip
+      - xz-utils
+      - docker-ce 
+      - docker-ce-cli 
+      - containerd.io
+      # Allows Ansible to become an unprivileged user
+      # https://github.com/georchestra/ansible/issues/55#issuecomment-588313638
+      - acl
+
+# Next tasks install Docker Compose per https://docs.docker.com/compose/install/
+- name: Install Docker Compose
+  get_url:
+    url: https://github.com/docker/compose/releases/download/1.27.4/docker-compose-Linux-x86_64
+    dest: /usr/local/bin/docker-compose
+    mode: '0755'
+
+- name: Add Docker Compose to path
+  command: ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
+  args:
+    creates: /usr/bin/docker-Compose
+  # Command errors out when the docker-compose already exists - ignore
+  ignore_errors: yes
+
+- name: Create Docker network
+  command: "docker network create katrips"
+  # Command errors out when the network already exists - ignore
+  ignore_errors: yes
+
+- name: Create unprivileged user for deploying and running services
+  user:
+    name: deploy
+    shell: /bin/bash
+    groups:
+      # Allow deploy to run Docker and Docker Compose
+      - docker
+
+- name: Set authorized key taken from file
+  ansible.posix.authorized_key:
+    user: deploy
+    state: present
+    key: "{{ lookup('file', lookup('env','HOME') + '/.ssh/id_rsa.pub') }}"
+
+- name: Create App directory for the deploy user
+  file:
+    path: /home/deploy/katrips
+    state: directory
+    mode: '0755'
+    owner: deploy
+
+- name: Read-write git checkout from github
+  git:
+    repo: 'https://github.com/nisarzz-ux/KATrips-Infracstructure.git'
+    dest: /home/deploy/katrips
+  become: yes
+  become_user: deploy

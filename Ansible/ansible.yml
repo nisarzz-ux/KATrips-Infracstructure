@@ -1,0 +1,23 @@
+---
+# This playbook deploys the whole application stack in this site.
+
+- name: Apply common configuration to all nodes.
+  hosts: all
+  remote_user: root
+
+  roles:
+    - common
+
+- name: Run Docker-Compose
+  hosts: webserver
+  remote_user: deploy
+
+  roles:
+    - web
+
+- name: Load database with data
+  hosts: dbservers
+  remote_user: root
+
+  roles:
+    - db

@@ -1,0 +1,13 @@
+---
+# This playbook contains db plays that will run sql import.
+
+- name: Copy sql dump
+  copy:
+    src: backup.sql
+    dest: /home/deploy/katrips/backup.sql
+
+- name: Import dump to database
+  # Hardcode search docker container name db
+  shell: cat backup.sql | docker exec -i $(docker ps -aqf "name=db") mysql -u {{ db_env.DB_USERNAME }} --password={{ db_env.DB_PASSWORD }} {{ db_env.DB_DATABASE }}
+  args:
+    chdir: /home/deploy/katrips

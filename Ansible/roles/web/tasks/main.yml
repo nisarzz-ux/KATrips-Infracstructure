@@ -1,0 +1,14 @@
+---
+# This playbook contains web plays that will run docker-compose.
+
+- name: Copy .env for docker-compose
+  copy:
+    src: .env
+    dest: /home/deploy/katrips/docker/.env
+
+- name: Run Docker-Compose
+  shell: docker-compose -f docker-compose.prod.yml up -d
+  args:
+    chdir: /home/deploy/katrips/docker
+  environment: "{{ db_env }}"
+  register: environment

@@ -1,0 +1,37 @@
+version: '3.7'
+
+services: 
+  proxy:
+    image: jwilder/nginx-proxy:0.7.0
+    restart: unless-stopped 
+    ports:
+      -"80:80"
+      -"443:443"
+    volumes: 
+     - /var/run/docker.sock:/tmp/docker.sock:ro
+     - ./nginx-proxy.conf:/etc/nginx/conf.d/nginx-proxy.conf:ro
+  
+  api:
+    image: nisarzz/katripsbackend:2.0
+    restart: unless-stopped
+    # TODO : Need better handling 
+    env_file: ".env"
+
+  frontend:
+    image : nisarzz/katrips-frontend:2.0
+    restart: unless-stopped
+  
+  db:
+    image: mysql:8.0.21
+    restart: on-failure 
+    volumes:
+      - mysql-data:/var/lib/mysql
+    environment: 
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_USER: ${DB_USERNAME}
+
+  volumes: 
+    mysql-data: 
+      driver: local
