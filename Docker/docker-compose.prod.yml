@@ -22,7 +22,7 @@ services:
     restart: unless-stopped
   
   db:
-    image: mysql:8.0.21
+    image: mysql:5.7.31
     restart: on-failure 
     volumes:
       - mysql-data:/var/lib/mysql
