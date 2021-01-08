@@ -4,11 +4,11 @@
 - name: Copy .env for docker-compose
   copy:
     src: .env
-    dest: /home/deploy/katrips/docker/.env
+    dest: /home/deploy/katrips/Docker/.env
 
 - name: Run Docker-Compose
   shell: docker-compose -f docker-compose.prod.yml up -d
   args:
-    chdir: /home/deploy/katrips/docker
+    chdir: /home/deploy/katrips/Docker
   environment: "{{ db_env }}"
   register: environment
