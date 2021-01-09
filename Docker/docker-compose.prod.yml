@@ -18,7 +18,7 @@ services:
     env_file: ".env"
 
   frontend:
-    image : nisarzz/katrips-frontend:2.0
+    image : nisarzz/katrips-frontendbaru:2.0
     restart: unless-stopped
   
   db:
