@@ -36,3 +36,4 @@ inventory
 .env
 *.json
 *.toml
+backup.sql
